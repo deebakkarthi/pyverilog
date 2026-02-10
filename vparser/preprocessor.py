@@ -37,12 +37,11 @@ class VerilogPreprocessor:
     ):
         if not isinstance(filelist, (tuple, list)):
             filelist = list(filelist)
-        # Elements in `filelist` can either be raw Verilog files, or Verilog code
-        # in python string. The following loop iterates through these `sources`,
-        # and normalizes all of them into files.
-        #
-        # For Verilog code in python string, the contents of the string is stored
-        # in a temporary file for further use with `iverilog`.
+        # Elements in `filelist` can either be raw Verilog files, or Verilog
+        # code in python string. The following loop iterates through these
+        # `sources`, and normalizes all of them into files.
+        # For Verilog code in python string, the contents of the string is
+        # stored  in a temporary file for further use with `iverilog`.
         self.temp_files_paths = []
         self.filelist = []
 
@@ -119,7 +118,9 @@ def pp(commandfile: str) -> str:
     return ret.stdout
 
 
-def preprocess(filelist, output="preprocess.output", include=None, define=None):
+def preprocess(
+    filelist, output="preprocess.output", include=None, define=None
+):
     pre = VerilogPreprocessor(filelist, output, include, define)
     pre.preprocess()
     text = open(output).read()

@@ -17,7 +17,6 @@ limitations under the License.
 from __future__ import absolute_import
 from __future__ import print_function
 import sys
-import os
 import re
 
 import ply.lex
@@ -296,7 +295,13 @@ class VerilogLexer(object):
     octal_escape = r"""([0-7]{1,3})"""
     hex_escape = r"""(x[0-9a-fA-F]+)"""
     escape_sequence = (
-        r"""(\\(""" + simple_escape + "|" + octal_escape + "|" + hex_escape + "))"
+        r"""(\\("""
+        + simple_escape
+        + "|"
+        + octal_escape
+        + "|"
+        + hex_escape
+        + "))"
     )
     string_char = r"""([^"\\\n]|""" + escape_sequence + ")"
     string_literal = '"' + string_char + '*"'

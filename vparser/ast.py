@@ -17,7 +17,6 @@ limitations under the License.
 from __future__ import absolute_import
 from __future__ import print_function
 import sys
-import re
 from abc import ABC, abstractmethod
 
 
@@ -55,7 +54,7 @@ class Node(ABC):
             c.show(buf, offset + indent, attrnames, showlineno)
 
     def __eq__(self, other):
-        if type(self) != type(other):
+        if type(self) is not type(other):
             return False
 
         self_attrs = tuple([getattr(self, a) for a in self.attr_names])
@@ -116,7 +115,13 @@ class ModuleDef(Node):
     attr_names = ("name",)
 
     def __init__(
-        self, name, paramlist, portlist, items, default_nettype="wire", lineno=0
+        self,
+        name,
+        paramlist,
+        portlist,
+        items,
+        default_nettype="wire",
+        lineno=0,
     ):
         self.lineno = lineno
         self.name = name
@@ -284,7 +289,13 @@ class Variable(Value):
     attr_names = ("name", "signed")
 
     def __init__(
-        self, name, width=None, signed=False, dimensions=None, value=None, lineno=0
+        self,
+        name,
+        width=None,
+        signed=False,
+        dimensions=None,
+        value=None,
+        lineno=0,
     ):
         self.lineno = lineno
         self.name = name
@@ -1032,7 +1043,9 @@ class InstanceList(Node):
 class Instance(Node):
     attr_names = ("name", "module")
 
-    def __init__(self, module, name, portlist, parameterlist, array=None, lineno=0):
+    def __init__(
+        self, module, name, portlist, parameterlist, array=None, lineno=0
+    ):
         self.lineno = lineno
         self.module = module
         self.name = name
