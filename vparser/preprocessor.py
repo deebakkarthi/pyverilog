@@ -20,8 +20,6 @@ Icarus Verilog is used as the internal preprocessor.
 Please install Icarus Verilog on your environment.
 """
 
-from __future__ import absolute_import
-from __future__ import print_function
 import os
 import tempfile
 import subprocess

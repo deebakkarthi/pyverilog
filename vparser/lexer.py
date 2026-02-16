@@ -23,12 +23,8 @@ import svabench.ply.lex
 
 
 class VerilogLexer:
-    """Verilog HDL Lexical Analayzer"""
-
     def __init__(self, error_func):
         self.lexer: svabench.ply.lex.Lexer
-        self.filename = ""
-        self.error_func = error_func
         self.directives = []
         self.default_nettype = "wire"
 
@@ -357,24 +353,8 @@ class VerilogLexer:
         pass
 
     def t_error(self, t):
-        msg = "Illegal character %s" % repr(t.value[0])
-        self._error(msg, t)
-
-    def _error(self, msg, token):
-        location = self._make_tok_location(token)
-        self.error_func(msg, location[0], location[1])
+        print("Illegal character '%s'" % t.value[0])
         self.lexer.skip(1)
-
-    def _find_tok_column(self, token):
-        i = token.lexpos
-        while i > 0:
-            if self.lexer.lexdata[i] == "\n":
-                break
-            i -= 1
-        return (token.lexpos - i) + 1
-
-    def _make_tok_location(self, token):
-        return (token.lineno, self._find_tok_column(token))
 
 
 def dump_tokens(text: str):
@@ -394,8 +374,7 @@ def dump_tokens(text: str):
         if not tok:
             break  # No more input
         ret.append(
-            "%s %s %d %s %d\n"
-            % (tok.value, tok.type, tok.lineno, lexer.filename, tok.lexpos)
+            "%s %s %d %d\n" % (tok.value, tok.type, tok.lineno, tok.lexpos)
         )
 
     return "".join(ret)
