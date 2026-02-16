@@ -19,23 +19,21 @@ from __future__ import print_function
 import sys
 import re
 
-import ply.lex
-from ply.lex import *
+import svabench.ply.lex
 
 
-class VerilogLexer(object):
+class VerilogLexer:
     """Verilog HDL Lexical Analayzer"""
 
     def __init__(self, error_func):
-        self.lexer: ply.lex.Lexer
+        self.lexer: svabench.ply.lex.Lexer
         self.filename = ""
         self.error_func = error_func
         self.directives = []
         self.default_nettype = "wire"
 
     def build(self, **kwargs):
-        self.lexer = ply.lex.lex(object=self, **kwargs)
-        # self.lexer = lex(object=self, **kwargs)
+        self.lexer = svabench.ply.lex.lex(object=self, **kwargs)
 
     def input(self, data):
         self.lexer.input(data)
@@ -189,11 +187,11 @@ class VerilogLexer(object):
     # Directive
     directive = r"""\`.*?\n"""
 
-    @TOKEN(directive)
-    def t_DIRECTIVE(self, t):
+    @svabench.ply.lex.TOKEN(directive)
+    def t_DIRECTIVE(self, t: ply.lex.LexToken):
         self.directives.append((self.lexer.lineno, t.value))
         t.lexer.lineno += t.value.count("\n")
-        m = re.match("^`default_nettype\s+(.+)\n", t.value)
+        m = re.match(r"^`default_nettype\s+(.+)\n", t.value)
         if m:
             self.default_nettype = m.group(1)
         pass
@@ -202,12 +200,12 @@ class VerilogLexer(object):
     linecomment = r"""//.*?\n"""
     commentout = r"""/\*(.|\n)*?\*/"""
 
-    @TOKEN(linecomment)
+    @svabench.ply.lex.TOKEN(linecomment)
     def t_LINECOMMENT(self, t):
         t.lexer.lineno += t.value.count("\n")
         pass
 
-    @TOKEN(commentout)
+    @svabench.ply.lex.TOKEN(commentout)
     def t_COMMENTOUT(self, t):
         t.lexer.lineno += t.value.count("\n")
         pass
@@ -308,47 +306,47 @@ class VerilogLexer(object):
 
     identifier = r"""(([a-zA-Z_])([a-zA-Z_0-9$])*)|((\\\S)(\S)*)"""
 
-    @TOKEN(string_literal)
+    @svabench.ply.lex.TOKEN(string_literal)
     def t_STRING_LITERAL(self, t):
         return t
 
-    @TOKEN(float_number)
+    @svabench.ply.lex.TOKEN(float_number)
     def t_FLOATNUMBER(self, t):
         return t
 
-    @TOKEN(signed_bin_number)
+    @svabench.ply.lex.TOKEN(signed_bin_number)
     def t_SIGNED_INTNUMBER_BIN(self, t):
         return t
 
-    @TOKEN(bin_number)
+    @svabench.ply.lex.TOKEN(bin_number)
     def t_INTNUMBER_BIN(self, t):
         return t
 
-    @TOKEN(signed_octal_number)
+    @svabench.ply.lex.TOKEN(signed_octal_number)
     def t_SIGNED_INTNUMBER_OCT(self, t):
         return t
 
-    @TOKEN(octal_number)
+    @svabench.ply.lex.TOKEN(octal_number)
     def t_INTNUMBER_OCT(self, t):
         return t
 
-    @TOKEN(signed_hex_number)
+    @svabench.ply.lex.TOKEN(signed_hex_number)
     def t_SIGNED_INTNUMBER_HEX(self, t):
         return t
 
-    @TOKEN(hex_number)
+    @svabench.ply.lex.TOKEN(hex_number)
     def t_INTNUMBER_HEX(self, t):
         return t
 
-    @TOKEN(signed_decimal_number)
+    @svabench.ply.lex.TOKEN(signed_decimal_number)
     def t_SIGNED_INTNUMBER_DEC(self, t):
         return t
 
-    @TOKEN(decimal_number)
+    @svabench.ply.lex.TOKEN(decimal_number)
     def t_INTNUMBER_DEC(self, t):
         return t
 
-    @TOKEN(identifier)
+    @svabench.ply.lex.TOKEN(identifier)
     def t_ID(self, t):
         t.type = self.reserved.get(t.value, "ID")
         return t
@@ -379,9 +377,9 @@ class VerilogLexer(object):
         return (token.lineno, self._find_tok_column(token))
 
 
-def dump_tokens(text):
+def dump_tokens(text: str):
     def my_error_func(msg, a, b):
-        sys.write(msg + "\n")
+        sys.stdout.write(msg + "\n")
         sys.exit()
 
     lexer = VerilogLexer(error_func=my_error_func)
