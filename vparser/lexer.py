@@ -14,36 +14,31 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from __future__ import absolute_import
-from __future__ import print_function
-import sys
 import re
+from typing import final
 
 import svabench.ply.lex
 
 
+# Add @final to ignore the warnings from pyright about missing string type
+# hints
+@final
 class VerilogLexer:
-    def __init__(self, error_func):
+    def __init__(self):
         self.lexer: svabench.ply.lex.Lexer
-        self.directives = []
+        self.directives: list[tuple[int, str]] = []
         self.default_nettype = "wire"
 
-    def build(self, **kwargs):
-        self.lexer = svabench.ply.lex.lex(object=self, **kwargs)
+    def build(self):
+        self.lexer = svabench.ply.lex.lex(object=self)
 
-    def input(self, data):
+    def input(self, data: str):
         self.lexer.input(data)
 
     def reset_lineno(self):
         self.lexer.lineno = 1
 
-    def get_directives(self):
-        return tuple(self.directives)
-
-    def get_default_nettype(self):
-        return self.default_nettype
-
-    def token(self):
+    def token(self) -> svabench.ply.lex.LexToken | None:
         return self.lexer.token()
 
     keywords = (
@@ -98,7 +93,7 @@ class VerilogLexer:
         "JOIN",
     )
 
-    reserved = {}
+    reserved: dict[str, str] = {}
     for keyword in keywords:
         if keyword == "SENS_OR":
             reserved["or"] = keyword
@@ -184,7 +179,7 @@ class VerilogLexer:
     directive = r"""\`.*?\n"""
 
     @svabench.ply.lex.TOKEN(directive)
-    def t_DIRECTIVE(self, t: ply.lex.LexToken):
+    def t_DIRECTIVE(self, t: svabench.ply.lex.LexToken):
         self.directives.append((self.lexer.lineno, t.value))
         t.lexer.lineno += t.value.count("\n")
         m = re.match(r"^`default_nettype\s+(.+)\n", t.value)
@@ -197,12 +192,12 @@ class VerilogLexer:
     commentout = r"""/\*(.|\n)*?\*/"""
 
     @svabench.ply.lex.TOKEN(linecomment)
-    def t_LINECOMMENT(self, t):
+    def t_LINECOMMENT(self, t: svabench.ply.lex.LexToken):
         t.lexer.lineno += t.value.count("\n")
         pass
 
     @svabench.ply.lex.TOKEN(commentout)
-    def t_COMMENTOUT(self, t):
+    def t_COMMENTOUT(self, t: svabench.ply.lex.LexToken):
         t.lexer.lineno += t.value.count("\n")
         pass
 
@@ -303,78 +298,63 @@ class VerilogLexer:
     identifier = r"""(([a-zA-Z_])([a-zA-Z_0-9$])*)|((\\\S)(\S)*)"""
 
     @svabench.ply.lex.TOKEN(string_literal)
-    def t_STRING_LITERAL(self, t):
+    def t_STRING_LITERAL(self, t: svabench.ply.lex.LexToken):
         return t
 
     @svabench.ply.lex.TOKEN(float_number)
-    def t_FLOATNUMBER(self, t):
+    def t_FLOATNUMBER(self, t: svabench.ply.lex.LexToken):
         return t
 
     @svabench.ply.lex.TOKEN(signed_bin_number)
-    def t_SIGNED_INTNUMBER_BIN(self, t):
+    def t_SIGNED_INTNUMBER_BIN(self, t: svabench.ply.lex.LexToken):
         return t
 
     @svabench.ply.lex.TOKEN(bin_number)
-    def t_INTNUMBER_BIN(self, t):
+    def t_INTNUMBER_BIN(self, t: svabench.ply.lex.LexToken):
         return t
 
     @svabench.ply.lex.TOKEN(signed_octal_number)
-    def t_SIGNED_INTNUMBER_OCT(self, t):
+    def t_SIGNED_INTNUMBER_OCT(self, t: svabench.ply.lex.LexToken):
         return t
 
     @svabench.ply.lex.TOKEN(octal_number)
-    def t_INTNUMBER_OCT(self, t):
+    def t_INTNUMBER_OCT(self, t: svabench.ply.lex.LexToken):
         return t
 
     @svabench.ply.lex.TOKEN(signed_hex_number)
-    def t_SIGNED_INTNUMBER_HEX(self, t):
+    def t_SIGNED_INTNUMBER_HEX(self, t: svabench.ply.lex.LexToken):
         return t
 
     @svabench.ply.lex.TOKEN(hex_number)
-    def t_INTNUMBER_HEX(self, t):
+    def t_INTNUMBER_HEX(self, t: svabench.ply.lex.LexToken):
         return t
 
     @svabench.ply.lex.TOKEN(signed_decimal_number)
-    def t_SIGNED_INTNUMBER_DEC(self, t):
+    def t_SIGNED_INTNUMBER_DEC(self, t: svabench.ply.lex.LexToken):
         return t
 
     @svabench.ply.lex.TOKEN(decimal_number)
-    def t_INTNUMBER_DEC(self, t):
+    def t_INTNUMBER_DEC(self, t: svabench.ply.lex.LexToken):
         return t
 
     @svabench.ply.lex.TOKEN(identifier)
-    def t_ID(self, t):
+    def t_ID(self, t: svabench.ply.lex.LexToken):
         t.type = self.reserved.get(t.value, "ID")
         return t
 
-    def t_NEWLINE(self, t):
+    def t_NEWLINE(self, t: svabench.ply.lex.LexToken):
         r"\n+"
         t.lexer.lineno += t.value.count("\n")
         pass
 
-    def t_error(self, t):
+    def t_error(self, t: svabench.ply.lex.LexToken):
         print("Illegal character '%s'" % t.value[0])
         self.lexer.skip(1)
 
 
 def dump_tokens(text: str):
-    def my_error_func(msg, a, b):
-        sys.stdout.write(msg + "\n")
-        sys.exit()
-
-    lexer = VerilogLexer(error_func=my_error_func)
+    lexer = VerilogLexer()
     lexer.build()
     lexer.input(text)
 
-    ret = []
-
-    # Tokenize
-    while True:
-        tok = lexer.token()
-        if not tok:
-            break  # No more input
-        ret.append(
-            "%s %s %d %d\n" % (tok.value, tok.type, tok.lineno, tok.lexpos)
-        )
-
-    return "".join(ret)
+    return lexer.lexer
