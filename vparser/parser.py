@@ -18,18 +18,18 @@ from __future__ import absolute_import
 from __future__ import print_function
 import os
 import pathlib
-from ply.yacc import yacc
+from typing import final
+from svabench.ply.yacc import yacc
 
 from .preprocessor import VerilogPreprocessor
 from .lexer import VerilogLexer
 from .ast import *
 
 
-class VerilogParser(object):
+@final
+class VerilogParser:
     "Verilog HDL Parser"
 
-    # Expression Precedence
-    # Reference: http://hp.vector.co.jp/authors/VA016670/verilog/index.html
     precedence = (
         # <- Weak
         ("left", "LOR"),
@@ -60,27 +60,21 @@ class VerilogParser(object):
     )
 
     def __init__(self, outputdir=".", debug=True):
-        self.lexer = VerilogLexer(error_func=self._lexer_error_func)
+        self.lexer = VerilogLexer()
         self.lexer.build()
 
         self.tokens = self.lexer.tokens
         pathlib.Path(outputdir).mkdir(parents=True, exist_ok=True)
-        self.parser = yacc(
-            module=self, method="LALR", outputdir=outputdir, debug=debug
-        )
-
-    def _lexer_error_func(self, msg, line, column):
-        coord = self._coord(line, column)
-        raise ParseError("%s: %s" % (coord, msg))
+        self.parser = yacc(module=self, debug=debug)
 
     def get_directives(self):
-        return self.lexer.get_directives()
+        return self.lexer.directives
 
     def get_default_nettype(self):
-        return self.lexer.get_default_nettype()
+        return self.lexer.default_nettype
 
     # Returns AST
-    def parse(self, text, debug=0):
+    def parse(self, text, debug=False):
         return self.parser.parse(text, lexer=self.lexer, debug=debug)
 
     # --------------------------------------------------------------------------
@@ -2675,6 +2669,12 @@ class VerilogCodeParser(object):
 
     def get_directives(self):
         return self.directives
+
+
+def parse_(text: str):
+    parser = VerilogParser(debug=False)
+    ast = parser.parse(text)
+    return ast
 
 
 def parse(
