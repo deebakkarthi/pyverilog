@@ -2671,7 +2671,7 @@ class VerilogCodeParser(object):
         return self.directives
 
 
-def parse_(text: str):
+def parse_(text: str) -> Source:
     parser = VerilogParser(debug=False)
     ast = parser.parse(text)
     return ast

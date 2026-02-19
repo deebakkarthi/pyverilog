@@ -18,6 +18,7 @@ from __future__ import absolute_import
 from __future__ import print_function
 import sys
 from abc import ABC, abstractmethod
+from typing import override
 
 
 class Node(ABC):
@@ -87,7 +88,7 @@ class Source(Node):
     def __init__(self, name, description, lineno=0):
         self.lineno = lineno
         self.name = name
-        self.description = description
+        self.description: Description = description
 
     def children(self):
         nodelist = []
@@ -102,9 +103,10 @@ class Description(Node):
 
     def __init__(self, definitions, lineno=0):
         self.lineno = lineno
-        self.definitions = definitions
+        self.definitions: list[ModuleDef] = definitions
 
-    def children(self):
+    @override
+    def children(self) -> tuple[ModuleDef]:
         nodelist = []
         if self.definitions:
             nodelist.extend(self.definitions)
@@ -123,8 +125,8 @@ class ModuleDef(Node):
         default_nettype="wire",
         lineno=0,
     ):
-        self.lineno = lineno
-        self.name = name
+        self.lineno: int = lineno
+        self.name: str = name
         self.paramlist = paramlist
         self.portlist = portlist
         self.items = items
@@ -139,6 +141,18 @@ class ModuleDef(Node):
         if self.items:
             nodelist.extend(self.items)
         return tuple(nodelist)
+
+    @override
+    def __hash__(self):
+        return hash(self.name)
+
+    @override
+    def __repr__(self) -> str:
+        return self.name
+
+    @override
+    def __str__(self) -> str:
+        return self.name
 
 
 class Paramlist(Node):
@@ -1027,7 +1041,7 @@ class InstanceList(Node):
 
     def __init__(self, module, parameterlist, instances, lineno=0):
         self.lineno = lineno
-        self.module = module
+        self.module :str = module
         self.parameterlist = parameterlist
         self.instances = instances
 
@@ -1038,6 +1052,14 @@ class InstanceList(Node):
         if self.instances:
             nodelist.extend(self.instances)
         return tuple(nodelist)
+
+    @override
+    def __repr__(self) -> str:
+        return self.module
+
+    @override
+    def __str__(self) -> str:
+        return self.module
 
 
 class Instance(Node):
